@@ -3,22 +3,27 @@ const userSchema = mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
+      required: [true, "Provide Username"],
       unique: true,
     },
     password: {
       type: String,
-      required: true,
+      required: [true, "Provide Password"],
+      minlength: 6,
     },
     role: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-        required: true
+      type: String,
+      enum: ["admin", "baseCommander", "logisticsOfficer"],
+      default: "logisticsOfficer",
+      required: true,
     },
-    base:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Base"
-    }
+    baseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Base",
+      required: function () {
+        return this.role === "admin";
+      },
+    },
   },
   { timestamp: true }
 );

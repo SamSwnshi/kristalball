@@ -2,39 +2,42 @@ import bcrypt from "bcrypt";
 import User from "../models/user.models.js";
 import Base from "../models/base.models.js";
 import Role from "../models/role.models.js";
-
+import {generateToken} from '../middleware/auth.middleware.js'
 export const login = async (req, res) => {
     try {
-        const { username, password } = req.body;
-        if (!username || !password) {
-            return res
-                .status(400)
-                .json({ message: "username and password required" });
-        }
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(401).json({ error: "Invalid credentials" });
-        }
+        const { username, password } = req.body || {};
+			if (!username || !password) {
+				return res.status(400).json({ error: 'username and password required' });
+			}
 
-        const hashedPassword = await bcrypt.compare(password, user.password);
-        if (!hashedPassword) {
-            return res.status(401).json({ error: "Invalid credentials" });
-        }
+			
+			const user = await User.findOne({ username })
+				.populate('baseId');
 
-        const token = generateToken({
-            _id: user._id,
-            rolename: user.role?.name,
-            baseId: user.base?._id,
-        });
-        return res.json({
-            token,
-            user: {
-                id: String(user._id),
-                username: user.username,
-                role: user.role?.name,
-                baseId: user.base ? String(user.base._id) : null,
-            },
-        });
+			if (!user) {
+				return res.status(401).json({ error: 'Invalid credentials' });
+			}
+
+			const ok = await bcrypt.compare(password, user.password);
+			if (!ok) {
+				return res.status(401).json({ error: 'Invalid credentials' });
+			}
+
+			const token = generateToken({ 
+				_id: user._id, 
+				roleName: user.role, 
+				baseId: user.baseId?._id 
+			});
+
+			return res.json({ 
+				token, 
+				user: { 
+					id: String(user._id), 
+					username: user.username, 
+					role: user.role, 
+					baseId: user.baseId ? String(user.baseId._id) : null 
+				} 
+			});
     } catch (error) { 
         console.error('Login error:', error);
 			return res.status(500).json({ error: 'Internal server error' });
@@ -42,23 +45,32 @@ export const login = async (req, res) => {
 };
 export const signUp = async (req, res) => {
     try {
-        const { username, password, roleId, baseId } = req.body || {};
+        const { username, password, role, baseId } = req.body || {};
 			
-			if (!username || !password || !roleId) {
+			if (!username || !password || !role) {
 				return res.status(400).json({ 
-					error: 'username, password, and roleId are required' 
+					error: 'username, password, and role are required' 
 				});
 			}
 
-            const existingUser = await User.findOne({ username });
+			// Validate role
+			const validRoles = ['admin', 'baseCommander', 'logisticsOfficer'];
+			if (!validRoles.includes(role)) {
+				return res.status(400).json({ 
+					error: 'Invalid role. Must be one of: admin, baseCommander, logisticsOfficer' 
+				});
+			}
+
+			
+
+			// Check if username already exists
+			const existingUser = await User.findOne({ username });
 			if (existingUser) {
 				return res.status(409).json({ error: 'Username already exists' });
 			}
-            const role = await Role.findById(roleId);
-			if (!role) {
-				return res.status(400).json({ error: 'Invalid role ID' });
-			}
-            let base = null;
+
+			// Verify base exists if provided
+			let base = null;
 			if (baseId) {
 				base = await Base.findById(baseId);
 				if (!base) {
@@ -66,28 +78,28 @@ export const signUp = async (req, res) => {
 				}
 			}
 
+			// Hash password
 			const saltRounds = 12;
-			const passwordHash = await bcrypt.hash(password, saltRounds);
+			const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-
+			// Create user
 			const user = new User({
 				username,
-				passwordHash,
-				role: roleId,
-				base: baseId || undefined
+				password: hashedPassword,
+				role,
+				baseId: baseId || undefined
 			});
 
 			await user.save();
-			await user.populate('role');
 			if (baseId) {
-				await user.populate('base');
+				await user.populate('baseId');
 			}
 
 			// Generate token
 			const token = generateToken({ 
 				_id: user._id, 
-				roleName: user.role?.name, 
-				baseId: user.base?._id 
+				roleName: user.role, 
+				baseId: user.baseId?._id 
 			});
 
 			return res.status(201).json({ 
@@ -95,8 +107,8 @@ export const signUp = async (req, res) => {
 				user: { 
 					id: String(user._id), 
 					username: user.username, 
-					role: user.role?.name, 
-					baseId: user.base ? String(user.base._id) : null 
+					role: user.role, 
+					baseId: user.baseId ? String(user.baseId._id) : null 
 				} 
 			});
     } catch (error) {
@@ -112,3 +124,26 @@ export const logout = async (req, res) => {
 			return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+export const setupBases = async(req ,res) =>{
+	try {
+			
+			// Clear existing bases
+			await Base.deleteMany({});
+
+			// Create bases
+			const bases = await Base.insertMany([
+				{ name: 'Alpha Base' },
+				{ name: 'Bravo Base' },
+				{ name: 'Charlie Base' }
+			]);
+
+			return res.status(201).json({
+				message: 'Bases created successfully',
+				bases: bases.map(b => ({ id: b._id, name: b.name }))
+			});
+		} catch (error) {
+			console.error('Setup bases error:', error);
+			return res.status(500).json({ error: 'Internal server error' });
+		}
+}

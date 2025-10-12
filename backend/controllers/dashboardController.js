@@ -1,15 +1,15 @@
-import mongoose from 'mongoose';
-import  Purchase  from '../models/purchase.models.js';
-import  Transfer  from '../models/transfer.models.js';
-import  Assignment  from '../models/assignment.models.js';
-import  Expenditure  from '../models/expenditure.models.js';
-import Base from '../models/base.models.js';
-import Equipment from '../models/equipment.models.js';
-import Balance from '../models/balance.models.js';
-export const getMetrics = async(req ,res) =>{
-    		try {
+import { connectMongo, mongoose } from '../lib/db.js';
+import { Purchase } from '../models/Purchase.js';
+import { Transfer } from '../models/Transfer.js';
+import { Assignment } from '../models/Assignment.js';
+import { Expenditure } from '../models/Expenditure.js';
+import { Balance } from '../models/Balance.js';
+
+export const dashboardController = {
+	async getMetrics(req, res) {
+		try {
 			const { start, end, base_id } = req.query;
-			
+			await connectMongo();
 
 			const dateFilter = (field) => ({
 				...(start ? { [field]: { $gte: new Date(start) } } : {}),
@@ -124,11 +124,13 @@ export const getMetrics = async(req ,res) =>{
 			console.error('Get dashboard metrics error:', error);
 			return res.status(500).json({ error: 'Internal server error' });
 		}
-	}
-export const getDetailedMovement=async (req, res) =>{
+	},
+
+	// Get detailed movement breakdown for pop-up display
+	async getDetailedMovement(req, res) {
 		try {
 			const { base_id, equipment_id, start, end } = req.query;
-
+			await connectMongo();
 
 			const dateFilter = (field) => ({
 				...(start ? { [field]: { $gte: new Date(start) } } : {}),
@@ -179,39 +181,39 @@ export const getDetailedMovement=async (req, res) =>{
 			res.json({
 				purchases: purchases.map(p => ({
 					id: String(p._id),
-					base_name: p.base ? p.base.name : 'Unknown Base',
-					equipment_name: p.equipment ? p.equipment.name : 'Unknown Equipment',
+					base_name: p.base.name,
+					equipment_name: p.equipment.name,
 					quantity: p.quantity,
 					date: p.purchasedAt
 				})),
 				transfersIn: transfersIn.map(t => ({
 					id: String(t._id),
-					from_base: t.fromBase ? t.fromBase.name : 'Unknown Base',
-					to_base: t.toBase ? t.toBase.name : 'Unknown Base',
-					equipment_name: t.equipment ? t.equipment.name : 'Unknown Equipment',
+					from_base: t.fromBase.name,
+					to_base: t.toBase.name,
+					equipment_name: t.equipment.name,
 					quantity: t.quantity,
 					date: t.transferredAt
 				})),
 				transfersOut: transfersOut.map(t => ({
 					id: String(t._id),
-					from_base: t.fromBase ? t.fromBase.name : 'Unknown Base',
-					to_base: t.toBase ? t.toBase.name : 'Unknown Base',
-					equipment_name: t.equipment ? t.equipment.name : 'Unknown Equipment',
+					from_base: t.fromBase.name,
+					to_base: t.toBase.name,
+					equipment_name: t.equipment.name,
 					quantity: t.quantity,
 					date: t.transferredAt
 				})),
 				assignments: assignments.map(a => ({
 					id: String(a._id),
-					base_name: a.base ? a.base.name : 'Unknown Base',
-					equipment_name: a.equipment ? a.equipment.name : 'Unknown Equipment',
+					base_name: a.base.name,
+					equipment_name: a.equipment.name,
 					assigned_to: a.assignedTo,
 					quantity: a.quantity,
 					date: a.assignedAt
 				})),
 				expenditures: expenditures.map(e => ({
 					id: String(e._id),
-					base_name: e.base ? e.base.name : 'Unknown Base',
-					equipment_name: e.equipment ? e.equipment.name : 'Unknown Equipment',
+					base_name: e.base.name,
+					equipment_name: e.equipment.name,
 					quantity: e.quantity,
 					date: e.expendedAt
 				}))
@@ -222,3 +224,4 @@ export const getDetailedMovement=async (req, res) =>{
 			return res.status(500).json({ error: 'Internal server error' });
 		}
 	}
+};

@@ -13,15 +13,15 @@ const userSchema = mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "baseCommander", "logisticsOfficer"],
-      default: "logisticsOfficer",
+      enum: ["Admin", "BaseCommander", "LogisticsOfficer"],
+      default: "LogisticsOfficer",
       required: true,
     },
     baseId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Base",
       required: function () {
-        return this.role === "admin";
+        return this.role !== "admin";
       },
     },
   },

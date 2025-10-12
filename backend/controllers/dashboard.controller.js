@@ -19,10 +19,10 @@ export const getMetrics = async(req ,res) =>{
 				} } : {})
 			});
 
-			// Base filter for ObjectId
+		
 			const baseFilter = base_id ? new mongoose.Types.ObjectId(base_id) : null;
 
-			// Purchases total
+			
 			const purchasesTotal = await Purchase.aggregate([
 				{ 
 					$match: { 
@@ -44,7 +44,7 @@ export const getMetrics = async(req ,res) =>{
 				{ $group: { _id: null, total: { $sum: '$quantity' } } }
 			]).then(r => (r[0]?.total || 0));
 
-			// Transfer Out
+			
 			const transferOut = await Transfer.aggregate([
 				{ 
 					$match: { 
@@ -55,7 +55,7 @@ export const getMetrics = async(req ,res) =>{
 				{ $group: { _id: null, total: { $sum: '$quantity' } } }
 			]).then(r => (r[0]?.total || 0));
 
-			// Assigned
+			
 			const assigned = await Assignment.aggregate([
 				{ 
 					$match: { 
@@ -66,7 +66,7 @@ export const getMetrics = async(req ,res) =>{
 				{ $group: { _id: null, total: { $sum: '$quantity' } } }
 			]).then(r => (r[0]?.total || 0));
 
-			// Expended
+			
 			const expended = await Expenditure.aggregate([
 				{ 
 					$match: { 
@@ -79,12 +79,12 @@ export const getMetrics = async(req ,res) =>{
 
 			const netMovement = purchasesTotal + transferIn - transferOut;
 
-			// Get opening and closing balances
+		
 			let openingBalance = 0;
 			let closingBalance = 0;
 
 			if (baseFilter) {
-				// Get the most recent balance for the base
+				
 				const latestBalance = await Balance.findOne({ base: baseFilter })
 					.sort({ date: -1 })
 					.populate('equipment');
@@ -93,7 +93,7 @@ export const getMetrics = async(req ,res) =>{
 					openingBalance = latestBalance.openingBalance;
 					closingBalance = latestBalance.closingBalance;
 				} else {
-					// If no balance record exists, calculate from current data
+					
 					openingBalance = 0;
 					closingBalance = netMovement - assigned - expended;
 				}
@@ -109,7 +109,7 @@ export const getMetrics = async(req ,res) =>{
 					transferOut, 
 					assigned, 
 					expended,
-					// Detailed breakdown for pop-up display
+					
 					detailedMovement: {
 						purchases: purchasesTotal,
 						transfersIn: transferIn,
@@ -141,35 +141,35 @@ export const getDetailedMovement=async (req, res) =>{
 			const baseFilter = base_id ? new mongoose.Types.ObjectId(base_id) : null;
 			const equipmentFilter = equipment_id ? new mongoose.Types.ObjectId(equipment_id) : null;
 
-			// Get detailed purchases
+			
 			const purchases = await Purchase.find({
 				...(baseFilter ? { base: baseFilter } : {}),
 				...(equipmentFilter ? { equipment: equipmentFilter } : {}),
 				...(start || end ? dateFilter('purchasedAt') : {})
 			}).populate('base equipment').sort({ purchasedAt: -1 });
 
-			// Get detailed transfers in
+			
 			const transfersIn = await Transfer.find({
 				...(baseFilter ? { toBase: baseFilter } : {}),
 				...(equipmentFilter ? { equipment: equipmentFilter } : {}),
 				...(start || end ? dateFilter('transferredAt') : {})
 			}).populate('fromBase toBase equipment').sort({ transferredAt: -1 });
 
-			// Get detailed transfers out
+			
 			const transfersOut = await Transfer.find({
 				...(baseFilter ? { fromBase: baseFilter } : {}),
 				...(equipmentFilter ? { equipment: equipmentFilter } : {}),
 				...(start || end ? dateFilter('transferredAt') : {})
 			}).populate('fromBase toBase equipment').sort({ transferredAt: -1 });
 
-			// Get detailed assignments
+		
 			const assignments = await Assignment.find({
 				...(baseFilter ? { base: baseFilter } : {}),
 				...(equipmentFilter ? { equipment: equipmentFilter } : {}),
 				...(start || end ? dateFilter('assignedAt') : {})
 			}).populate('base equipment').sort({ assignedAt: -1 });
 
-			// Get detailed expenditures
+			
 			const expenditures = await Expenditure.find({
 				...(baseFilter ? { base: baseFilter } : {}),
 				...(equipmentFilter ? { equipment: equipmentFilter } : {}),

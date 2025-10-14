@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { purchaseAPI } from '../../service/api';
+import { purchaseApi } from '../../service/api';
 
 const initialState = {
   purchases: [],
@@ -47,7 +47,7 @@ export const fetchPurchases = (params) => async (dispatch) => {
     dispatch(setLoading(true));
     dispatch(clearError());
     
-    const response = await purchaseAPI.getPurchases(params);
+    const response = await purchaseApi.getPurchases(params);
     dispatch(fetchPurchasesSuccess(response.data));
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Failed to fetch purchases';
@@ -60,7 +60,7 @@ export const createPurchase = (purchaseData) => async (dispatch) => {
     dispatch(setLoading(true));
     dispatch(clearError());
     
-    const response = await purchaseAPI.createPurchase(purchaseData);
+    const response = await purchaseApi.createPurchase(purchaseData);
     dispatch(createPurchaseSuccess(response.data));
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Failed to create purchase';

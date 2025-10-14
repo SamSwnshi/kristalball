@@ -20,7 +20,7 @@ export const calculateBalances = async (req, res) => {
 
 			
 
-			// Validate that base and equipment exist
+		
 			const base = await Base.findById(base_id);
 			const equipment = await Equipment.findById(equipment_id);
 			
@@ -32,7 +32,7 @@ export const calculateBalances = async (req, res) => {
 				return res.status(400).json({ error: 'Equipment not found' });
 			}
 
-			// Get opening balance (from previous period or initial)
+			
 			const previousBalance = await Balance.findOne({
 				base: base_id,
 				equipment: equipment_id
@@ -40,12 +40,12 @@ export const calculateBalances = async (req, res) => {
 
 			const openingBalance = previousBalance ? previousBalance.closingBalance : 0;
 
-			// Calculate movements for the period
+			
 			const dateFilter = {};
 			if (start_date) dateFilter.$gte = new Date(start_date);
 			if (end_date) dateFilter.$lte = new Date(end_date);
 
-			// Purchases
+			
 			const purchases = await Purchase.aggregate([
 				{
 					$match: {
@@ -58,7 +58,7 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const purchasesTotal = purchases[0]?.total || 0;
 
-			// Transfers In
+			
 			const transfersIn = await Transfer.aggregate([
 				{
 					$match: {
@@ -71,7 +71,7 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const transfersInTotal = transfersIn[0]?.total || 0;
 
-			// Transfers Out
+			
 			const transfersOut = await Transfer.aggregate([
 				{
 					$match: {
@@ -84,7 +84,7 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const transfersOutTotal = transfersOut[0]?.total || 0;
 
-			// Assigned
+			
 			const assigned = await Assignment.aggregate([
 				{
 					$match: {
@@ -97,7 +97,7 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const assignedTotal = assigned[0]?.total || 0;
 
-			// Expended
+			
 			const expended = await Expenditure.aggregate([
 				{
 					$match: {
@@ -110,11 +110,11 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const expendedTotal = expended[0]?.total || 0;
 
-			// Calculate net movement and closing balance
+			
 			const netMovement = purchasesTotal + transfersInTotal - transfersOutTotal;
 			const closingBalance = openingBalance + netMovement - assignedTotal - expendedTotal;
 
-			// Create or update balance record
+			
 			const balanceData = {
 				base: base_id,
 				equipment: equipment_id,
@@ -177,7 +177,7 @@ export const getBalanceSummary = async (req, res) => {
 				.populate('base equipment')
 				.sort({ date: -1 });
 
-			// Calculate totals
+			
 			const totals = balances.reduce((acc, balance) => {
 				acc.totalOpeningBalance += balance.openingBalance;
 				acc.totalClosingBalance += balance.closingBalance;
@@ -238,7 +238,7 @@ try {
 
 			
 
-			// Validate that base and equipment exist
+			
 			const base = await Base.findById(base_id);
 			const equipment = await Equipment.findById(equipment_id);
 			

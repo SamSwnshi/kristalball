@@ -53,7 +53,7 @@ export const signUp = async (req, res) => {
 				});
 			}
 
-			// Validate role
+			
 			const validRoles = ['Admin', 'BaseCommander', 'LogisticsOfficer'];
 			if (!validRoles.includes(role)) {
 				return res.status(400).json({ 
@@ -63,13 +63,13 @@ export const signUp = async (req, res) => {
 
 			
 
-			// Check if username already exists
+			
 			const existingUser = await User.findOne({ username });
 			if (existingUser) {
 				return res.status(409).json({ error: 'Username already exists' });
 			}
 
-			// Verify base exists if provided
+			
 			let base = null;
 			if (baseId) {
 				base = await Base.findById(baseId);
@@ -78,11 +78,11 @@ export const signUp = async (req, res) => {
 				}
 			}
 
-			// Hash password
+			
 			const saltRounds = 12;
 			const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-			// Create user
+			
 			const user = new User({
 				username,
 				password: hashedPassword,
@@ -95,7 +95,7 @@ export const signUp = async (req, res) => {
 				await user.populate('baseId');
 			}
 
-			// Generate token
+			
 			const token = generateToken({ 
 				_id: user._id, 
 				roleName: user.role, 
@@ -128,10 +128,10 @@ export const logout = async (req, res) => {
 export const setupBases = async(req ,res) =>{
 	try {
 			
-			// Clear existing bases
+			
 			await Base.deleteMany({});
 
-			// Create bases
+		
 			const bases = await Base.insertMany([
 				{ name: 'Alpha Base' },
 				{ name: 'Bravo Base' },

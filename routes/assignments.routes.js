@@ -6,21 +6,21 @@ const assignmentsRouter = express.Router();
 
 assignmentsRouter.use(authenticate);
 
-// Assign assets
+
 assignmentsRouter.post(
   "/assign",
   requireRoles(["Admin", "BaseCommander", "LogisticsOfficer"]),
   createAssignment
 );
 
-// Record expenditure
+
 assignmentsRouter.post(
   "/expend",
   requireRoles(["Admin", "BaseCommander", "LogisticsOfficer"]),
   createExpenditure
 );
 
-// List assignments and expenditures
+
 assignmentsRouter.get(
   "/",
   requireRoles(["Admin", "BaseCommander", "LogisticsOfficer"]),

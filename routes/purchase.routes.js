@@ -6,10 +6,9 @@ const purchasesRouter = express.Router();
 
 purchasesRouter.use(authenticate);
 
-// Create purchase
+
 purchasesRouter.post('/create', requireRoles(['Admin', 'BaseCommander', 'LogisticsOfficer']), createPurchase);
 
-// List purchases with filters
 purchasesRouter.get('/', requireRoles(['Admin', 'BaseCommander', 'LogisticsOfficer']), getPurchases);
 
 export default purchasesRouter ;

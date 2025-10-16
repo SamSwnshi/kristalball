@@ -6,6 +6,7 @@ import Balance  from '../models/balance.models.js';
 import Base from '../models/base.models.js';
 import Equipment from '../models/equipment.models.js';
 import config from '../db/config.js';
+import mongoose from 'mongoose';
 
 
 export const calculateBalances = async (req, res) => {
@@ -230,36 +231,53 @@ export const setOpeningBalance = async (req, res) => {
 try {
 			const { base_id, equipment_id, opening_balance, date } = req.body;
 			
-			if (!base_id || !equipment_id || opening_balance === undefined) {
+			if (!base_id || opening_balance === undefined) {
 				return res.status(400).json({ 
-					error: 'base_id, equipment_id, and opening_balance are required' 
+					error: 'base_id and opening_balance are required' 
 				});
+			}
+
+			if (!mongoose.isValidObjectId(base_id)) {
+				return res.status(400).json({ error: 'Invalid base_id' });
+			}
+
+			if (equipment_id && !mongoose.isValidObjectId(equipment_id)) {
+				return res.status(400).json({ error: 'Invalid equipment_id' });
+			}
+
+			const openingBalanceNum = Number(opening_balance);
+			if (!Number.isFinite(openingBalanceNum) || openingBalanceNum < 0) {
+				return res.status(400).json({ error: 'opening_balance must be a non-negative number' });
 			}
 
 			
 
 			
 			const base = await Base.findById(base_id);
-			const equipment = await Equipment.findById(equipment_id);
+			const equipment = equipment_id ? await Equipment.findById(equipment_id) : null;
 			
 			if (!base) {
 				return res.status(400).json({ error: 'Base not found' });
 			}
 			
-			if (!equipment) {
+			if (equipment_id && !equipment) {
 				return res.status(400).json({ error: 'Equipment not found' });
 			}
 
 			const balanceDate = date ? new Date(date) : new Date();
 			
+			const baseObjectId = new mongoose.Types.ObjectId(base_id);
+			const query = { base: baseObjectId, date: balanceDate };
+			if (equipment_id) query.equipment = new mongoose.Types.ObjectId(equipment_id);
+			const update = {
+				base: base_id,
+				openingBalance: openingBalanceNum,
+				date: balanceDate
+			};
+			if (equipment_id) update.equipment = equipment_id;
 			const balance = await Balance.findOneAndUpdate(
-				{ base: base_id, equipment: equipment_id, date: balanceDate },
-				{ 
-					base: base_id,
-					equipment: equipment_id,
-					openingBalance: opening_balance,
-					date: balanceDate
-				},
+				query,
+				update,
 				{ upsert: true, new: true }
 			).populate('base equipment');
 
@@ -269,8 +287,8 @@ try {
 					id: String(balance._id),
 					base_id: String(balance.base?._id || base_id),
 					base_name: balance.base?.name || 'Unknown Base',
-					equipment_id: String(balance.equipment?._id || equipment_id),
-					equipment_name: balance.equipment?.name || 'Unknown Equipment',
+					equipment_id: balance.equipment ? String(balance.equipment._id) : null,
+					equipment_name: balance.equipment ? balance.equipment.name : null,
 					opening_balance: balance.openingBalance,
 					date: balance.date
 				}
@@ -278,6 +296,9 @@ try {
 
 		} catch (error) {
 			console.error('Set opening balance error:', error);
+			if (error?.name === 'CastError' || /ObjectId/i.test(String(error?.message))) {
+				return res.status(400).json({ error: 'Invalid identifier provided for base_id or equipment_id' });
+			}
 			return res.status(500).json({ error: 'Internal server error' });
 		}
 	}

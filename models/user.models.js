@@ -21,7 +21,7 @@ const userSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Base",
       required: function () {
-        return this.role !== "admin";
+        return this.role !== "Admin";
       },
     },
   },

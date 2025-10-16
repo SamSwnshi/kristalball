@@ -7,7 +7,7 @@ const balancesRouter = express.Router();
 balancesRouter.use(authenticate);
 
 
-balancesRouter.post('/calculate', requireRoles(['Admin', 'BaseCommander', 'LogisticsOfficer']), calculateBalances);
+balancesRouter.post('/calculate', requireRoles(['Admin', 'BaseCommander']), calculateBalances);
 
 
 balancesRouter.get('/summary', requireRoles(['Admin', 'BaseCommander', 'LogisticsOfficer']), getBalanceSummary);

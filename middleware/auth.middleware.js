@@ -51,7 +51,7 @@ const authenticate = async (req, res, next) => {
 				baseId: user.baseId ? String(user.baseId._id) : null
 			}
 		};
-			console.log("Authenticated User:", req.user);
+
 
 		next();
 	} catch (error) {

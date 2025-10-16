@@ -54,12 +54,12 @@ export const signUp = async (req, res) => {
 			}
 
 			
-			const validRoles = ['Admin', 'BaseCommander', 'LogisticsOfficer'];
-			if (!validRoles.includes(role)) {
-				return res.status(400).json({ 
-					error: 'Invalid role. Must be one of: admin, baseCommander, logisticsOfficer' 
-				});
-			}
+            const validRoles = ['Admin', 'BaseCommander', 'LogisticsOfficer'];
+            if (!validRoles.includes(role)) {
+                return res.status(400).json({ 
+                    error: 'Invalid role. Must be one of: Admin, BaseCommander, LogisticsOfficer' 
+                });
+            }
 
 			
 

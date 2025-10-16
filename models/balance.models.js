@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const balanceSchema = new mongoose.Schema({
 	base: { type: mongoose.Schema.Types.ObjectId, ref: 'Base', required: true },
-	equipment: { type: mongoose.Schema.Types.ObjectId, ref: 'Equipment', required: true },
+	equipment: { type: mongoose.Schema.Types.ObjectId, ref: 'Equipment', required: false },
 	openingBalance: { type: Number, default: 0, min: 0 },
 	closingBalance: { type: Number, default: 0, min: 0 },
 	date: { type: Date, default: Date.now },

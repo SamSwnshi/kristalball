@@ -11,7 +11,7 @@ baseRouter.use(authenticate);
 
 baseRouter.get(
   "/bases",
-  requireRoles(["Admin", "BaseCommander", "LogisticsOfficer"]),
+  requireRoles(["Admin", "BaseCommander"]),
   getBases
 );
 
@@ -32,7 +32,7 @@ baseRouter.get(
 
 baseRouter.get(
   "/roles",
-  requireRoles(["Admin", "BaseCommander", "LogisticsOfficer"]),
+  requireRoles(["Admin"]),
   getRoles
 );
 

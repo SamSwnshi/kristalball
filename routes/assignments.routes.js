@@ -9,21 +9,21 @@ assignmentsRouter.use(authenticate);
 
 assignmentsRouter.post(
   "/assign",
-  requireRoles(["Admin", "BaseCommander", "LogisticsOfficer"]),
+  requireRoles(["Admin", "BaseCommander"]),
   createAssignment
 );
 
 
 assignmentsRouter.post(
   "/expend",
-  requireRoles(["Admin", "BaseCommander", "LogisticsOfficer"]),
+  requireRoles(["Admin", "BaseCommander"]),
   createExpenditure
 );
 
 
 assignmentsRouter.get(
   "/",
-  requireRoles(["Admin", "BaseCommander", "LogisticsOfficer"]),
+  requireRoles(["Admin", "BaseCommander"]),
   getAssignmentsAndExpenditures
 );
 

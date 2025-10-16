@@ -6,6 +6,7 @@ import Balance  from '../models/balance.models.js';
 import Base from '../models/base.models.js';
 import Equipment from '../models/equipment.models.js';
 import config from '../db/config.js';
+import mongoose from 'mongoose';
 
 
 export const calculateBalances = async (req, res) => {
@@ -20,7 +21,7 @@ export const calculateBalances = async (req, res) => {
 
 			
 
-			// Validate that base and equipment exist
+		
 			const base = await Base.findById(base_id);
 			const equipment = await Equipment.findById(equipment_id);
 			
@@ -32,7 +33,7 @@ export const calculateBalances = async (req, res) => {
 				return res.status(400).json({ error: 'Equipment not found' });
 			}
 
-			// Get opening balance (from previous period or initial)
+			
 			const previousBalance = await Balance.findOne({
 				base: base_id,
 				equipment: equipment_id
@@ -40,12 +41,12 @@ export const calculateBalances = async (req, res) => {
 
 			const openingBalance = previousBalance ? previousBalance.closingBalance : 0;
 
-			// Calculate movements for the period
+			
 			const dateFilter = {};
 			if (start_date) dateFilter.$gte = new Date(start_date);
 			if (end_date) dateFilter.$lte = new Date(end_date);
 
-			// Purchases
+			
 			const purchases = await Purchase.aggregate([
 				{
 					$match: {
@@ -58,7 +59,7 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const purchasesTotal = purchases[0]?.total || 0;
 
-			// Transfers In
+			
 			const transfersIn = await Transfer.aggregate([
 				{
 					$match: {
@@ -71,7 +72,7 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const transfersInTotal = transfersIn[0]?.total || 0;
 
-			// Transfers Out
+			
 			const transfersOut = await Transfer.aggregate([
 				{
 					$match: {
@@ -84,7 +85,7 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const transfersOutTotal = transfersOut[0]?.total || 0;
 
-			// Assigned
+			
 			const assigned = await Assignment.aggregate([
 				{
 					$match: {
@@ -97,7 +98,7 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const assignedTotal = assigned[0]?.total || 0;
 
-			// Expended
+			
 			const expended = await Expenditure.aggregate([
 				{
 					$match: {
@@ -110,11 +111,11 @@ export const calculateBalances = async (req, res) => {
 			]);
 			const expendedTotal = expended[0]?.total || 0;
 
-			// Calculate net movement and closing balance
+			
 			const netMovement = purchasesTotal + transfersInTotal - transfersOutTotal;
 			const closingBalance = openingBalance + netMovement - assignedTotal - expendedTotal;
 
-			// Create or update balance record
+			
 			const balanceData = {
 				base: base_id,
 				equipment: equipment_id,
@@ -177,7 +178,7 @@ export const getBalanceSummary = async (req, res) => {
 				.populate('base equipment')
 				.sort({ date: -1 });
 
-			// Calculate totals
+			
 			const totals = balances.reduce((acc, balance) => {
 				acc.totalOpeningBalance += balance.openingBalance;
 				acc.totalClosingBalance += balance.closingBalance;
@@ -230,36 +231,53 @@ export const setOpeningBalance = async (req, res) => {
 try {
 			const { base_id, equipment_id, opening_balance, date } = req.body;
 			
-			if (!base_id || !equipment_id || opening_balance === undefined) {
+			if (!base_id || opening_balance === undefined) {
 				return res.status(400).json({ 
-					error: 'base_id, equipment_id, and opening_balance are required' 
+					error: 'base_id and opening_balance are required' 
 				});
+			}
+
+			if (!mongoose.isValidObjectId(base_id)) {
+				return res.status(400).json({ error: 'Invalid base_id' });
+			}
+
+			if (equipment_id && !mongoose.isValidObjectId(equipment_id)) {
+				return res.status(400).json({ error: 'Invalid equipment_id' });
+			}
+
+			const openingBalanceNum = Number(opening_balance);
+			if (!Number.isFinite(openingBalanceNum) || openingBalanceNum < 0) {
+				return res.status(400).json({ error: 'opening_balance must be a non-negative number' });
 			}
 
 			
 
-			// Validate that base and equipment exist
+			
 			const base = await Base.findById(base_id);
-			const equipment = await Equipment.findById(equipment_id);
+			const equipment = equipment_id ? await Equipment.findById(equipment_id) : null;
 			
 			if (!base) {
 				return res.status(400).json({ error: 'Base not found' });
 			}
 			
-			if (!equipment) {
+			if (equipment_id && !equipment) {
 				return res.status(400).json({ error: 'Equipment not found' });
 			}
 
 			const balanceDate = date ? new Date(date) : new Date();
 			
+			const baseObjectId = new mongoose.Types.ObjectId(base_id);
+			const query = { base: baseObjectId, date: balanceDate };
+			if (equipment_id) query.equipment = new mongoose.Types.ObjectId(equipment_id);
+			const update = {
+				base: base_id,
+				openingBalance: openingBalanceNum,
+				date: balanceDate
+			};
+			if (equipment_id) update.equipment = equipment_id;
 			const balance = await Balance.findOneAndUpdate(
-				{ base: base_id, equipment: equipment_id, date: balanceDate },
-				{ 
-					base: base_id,
-					equipment: equipment_id,
-					openingBalance: opening_balance,
-					date: balanceDate
-				},
+				query,
+				update,
 				{ upsert: true, new: true }
 			).populate('base equipment');
 
@@ -269,8 +287,8 @@ try {
 					id: String(balance._id),
 					base_id: String(balance.base?._id || base_id),
 					base_name: balance.base?.name || 'Unknown Base',
-					equipment_id: String(balance.equipment?._id || equipment_id),
-					equipment_name: balance.equipment?.name || 'Unknown Equipment',
+					equipment_id: balance.equipment ? String(balance.equipment._id) : null,
+					equipment_name: balance.equipment ? balance.equipment.name : null,
 					opening_balance: balance.openingBalance,
 					date: balance.date
 				}
@@ -278,6 +296,9 @@ try {
 
 		} catch (error) {
 			console.error('Set opening balance error:', error);
+			if (error?.name === 'CastError' || /ObjectId/i.test(String(error?.message))) {
+				return res.status(400).json({ error: 'Invalid identifier provided for base_id or equipment_id' });
+			}
 			return res.status(500).json({ error: 'Internal server error' });
 		}
 	}

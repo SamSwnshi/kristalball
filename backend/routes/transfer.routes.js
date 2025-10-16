@@ -6,10 +6,9 @@ const transfersRouter = express.Router();
 
 transfersRouter.use(authenticate);
 
-// Create transfer
+
 transfersRouter.post('/', requireRoles(['Admin', 'BaseCommander', 'LogisticsOfficer']), createTransfer);
 
-// List transfers
 transfersRouter.get('/get', requireRoles(['Admin', 'BaseCommander', 'LogisticsOfficer']), getTransfers);
 
 export default transfersRouter ;

@@ -1,20 +1,38 @@
 import  Purchase  from "../models/purchase.models.js";
 import  Equipment  from "../models/equipment.models.js";
 import  Base  from "../models/base.models.js";
+import mongoose from "mongoose";
 
 export const createPurchase = async (req, res) => {
   try {
-    const { base_id, equipment_id, quantity, purchased_at } = req.body || {};
-    if (!base_id || !equipment_id || !quantity) {
+    const { base_id, equipment_id, quantity, price, purchased_at } = req.body || {};
+    const numericQuantity = Number(quantity);
+    const numericPrice = Number(price);
+    if (!base_id || !equipment_id || !Number.isFinite(numericQuantity) || !Number.isFinite(numericPrice)) {
       return res
         .status(400)
-        .json({ error: "base_id, equipment_id, quantity required" });
+        .json({ error: "base_id, equipment_id, quantity, and price are required numbers" });
     }
 
+    // Resolve base and equipment identifiers: accept ObjectId or name strings
+    const resolveId = async (Model, value, label) => {
+      if (mongoose.isValidObjectId(value)) return value;
+      const byName = await Model.findOne({ name: value });
+      if (!byName) {
+        throw new Error(`${label} not found: ${value}`);
+      }
+      return byName._id;
+    };
+
+    const baseObjectId = await resolveId(Base, base_id, 'base');
+    const equipmentObjectId = await resolveId(Equipment, equipment_id, 'equipment');
+
     const purchase = await Purchase.create({
-      base: base_id,
-      equipment: equipment_id,
-      quantity,
+      base: baseObjectId,
+      equipment: equipmentObjectId,
+      createdBy: req.user?.id,
+      quantity: numericQuantity,
+      price: numericPrice,
       purchasedAt: purchased_at || new Date(),
     });
 
@@ -27,12 +45,13 @@ export const createPurchase = async (req, res) => {
 
 export const getPurchases = async (req, res) => {
   try {
-    const { start, end, base_id, equipment_type_id, equipment_id } = req.query;
+    const { start, end, base_id, equipment_type_id, equipment_id, mine } = req.query;
 
 
     const query = {};
     if (base_id) query.base = base_id;
     if (equipment_id) query.equipment = equipment_id;
+    if (mine === 'true' && req.user?.id) query.createdBy = req.user.id;
     if (start || end) {
       query.purchasedAt = {
         ...(start ? { $gte: new Date(start) } : {}),
@@ -61,6 +80,7 @@ export const getPurchases = async (req, res) => {
         equipment_id: r.equipment ? String(r.equipment._id) : null,
         equipment_name: r.equipment ? r.equipment.name : 'Unknown Equipment',
         quantity: r.quantity,
+        price: r.price,
         purchased_at: r.purchasedAt,
       }))
     );

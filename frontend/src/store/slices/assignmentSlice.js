@@ -60,9 +60,11 @@ export const fetchAssignments = (params) => async (dispatch) => {
     
     const response = await assignmentAPI.getAssignments(params);
     dispatch(fetchAssignmentsSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Failed to fetch assignments';
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to fetch assignments';
     dispatch(fetchAssignmentsFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -73,9 +75,11 @@ export const createAssignment = (assignmentData) => async (dispatch) => {
     
     const response = await assignmentAPI.createAssignment(assignmentData);
     dispatch(createAssignmentSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Failed to create assignment';
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to create assignment';
     dispatch(createAssignmentFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -86,9 +90,11 @@ export const createExpenditure = (expenditureData) => async (dispatch) => {
     
     const response = await assignmentAPI.createExpenditure(expenditureData);
     dispatch(createExpenditureSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Failed to create expenditure';
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to create expenditure';
     dispatch(createExpenditureFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 

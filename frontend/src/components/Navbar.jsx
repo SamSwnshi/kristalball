@@ -3,40 +3,49 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import { logoutUser } from '../store/slices/authSlice';
 import {
-  Home,
-  Package,
-  ShoppingCart,
-  ArrowRightLeft,
-  ClipboardList,
-  Calculator,
-  Menu,
-  X,
-  LogOut,
-  User,
+    Home,
+    Package,
+    ShoppingCart,
+    ArrowRightLeft,
+    ClipboardList,
+    Calculator,
+    Menu,
+    X,
+    LogOut,
+    User,
 } from "lucide-react";
 
 const Navbar = ({ children }) => {
-      const [sidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-    const navigation = [
-           { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Equipment", href: "/equipment", icon: Package },
-    { name: "Purchases", href: "/purchases", icon: ShoppingCart },
-    { name: "Transfers", href: "/transfers", icon: ArrowRightLeft },
-    { name: "Assignments", href: "/assignments", icon: ClipboardList },
-    { name: "Balances", href: "/balances", icon: Calculator },
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const location = useLocation();
+    const dispatch = useDispatch();
+    const { user } = useSelector((state) => state.auth);
+    const baseNavigation = [
+        { name: "Dashboard", href: "/dashboard", icon: Home },
+        { name: "Equipment", href: "/equipments", icon: Package },
+        { name: "Purchases", href: "/purchases", icon: ShoppingCart },
+        { name: "Transfers", href: "/transfers", icon: ArrowRightLeft },
+        { name: "Assignments", href: "/assignments", icon: ClipboardList },
+        { name: "Balances", href: "/balances", icon: Calculator },
     ]
-     const handleLogout = () => {
-    dispatch(logoutUser());
-  };
+    const role = user?.role;
+    const navigation = baseNavigation.filter((item) => {
+        if (role === 'Admin') return true;
+        if (role === 'BaseCommander') return true; // full app, but server will scope by base
+        if (role === 'LogisticsOfficer') {
+            return ["Dashboard", "Purchases", "Transfers"].includes(item.name);
+        }
+        return false;
+    });
+    const handleLogout = () => {
+        dispatch(logoutUser());
+    };
     const isCurrentPath = (path) => {
         return location.pathname === path;
     }
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Mobile sidebar */}
+
             <div
                 className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? "block" : "hidden"
                     }`}
@@ -108,7 +117,7 @@ const Navbar = ({ children }) => {
                 </div>
             </div>
 
-            {/* Desktop sidebar */}
+
             <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
                 <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
                     <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
@@ -119,8 +128,8 @@ const Navbar = ({ children }) => {
                                         <Package className="h-5 w-5 text-white" />
                                     </div>
                                 </div>
-                                <div className="ml-3">
-                                    <p className="text-sm font-medium text-gray-900">
+                                <div className="ml-1">
+                                    <p className="text-lg text-gray-900 font-bold">
                                         Military Equipment
                                     </p>
                                 </div>
@@ -170,7 +179,7 @@ const Navbar = ({ children }) => {
                 </div>
             </div>
 
-            {/* Main content */}
+
             <div className="lg:pl-64 flex flex-col flex-1">
                 {/* Mobile header */}
                 <div className="sticky top-0 z-10 lg:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-gray-50">
@@ -211,7 +220,7 @@ const Navbar = ({ children }) => {
                     </div>
                 </div>
 
-                {/* Page content */}
+
                 <main className="flex-1">
                     <div className="py-6">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

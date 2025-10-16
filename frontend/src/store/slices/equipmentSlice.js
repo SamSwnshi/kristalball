@@ -68,9 +68,11 @@ export const fetchEquipment = () => async (dispatch) => {
 
         const response = await baseApi.getEquipment();
         dispatch(fetchEquipmentSuccess(response.data));
+    return { success: true, data: response.data };
     } catch (error) {
         const errorMessage = error.response?.data?.message || 'Failed to fetch equipment';
         dispatch(fetchEquipmentFailure(errorMessage));
+    return { success: false, error: errorMessage };
     }
 };
 
@@ -81,9 +83,11 @@ export const fetchEquipmentTypes = () => async (dispatch) => {
 
         const response = await baseApi.getEquipmentTypes();
         dispatch(fetchEquipmentTypesSuccess(response.data));
+    return { success: true, data: response.data };
     } catch (error) {
         const errorMessage = error.response?.data?.message || 'Failed to fetch equipment types';
         dispatch(fetchEquipmentTypesFailure(errorMessage));
+    return { success: false, error: errorMessage };
     }
 };
 
@@ -94,9 +98,11 @@ export const createEquipment = (equipmentData) => async (dispatch) => {
 
         const response = await baseApi.createEquipment(equipmentData);
         dispatch(createEquipmentSuccess(response.data));
+    return { success: true, data: response.data };
     } catch (error) {
         const errorMessage = error.response?.data?.message || 'Failed to create equipment';
         dispatch(createEquipmentFailure(errorMessage));
+    return { success: false, error: errorMessage };
     }
 };
 
@@ -107,9 +113,11 @@ export const createEquipmentType = (typeData) => async (dispatch) => {
 
         const response = await baseApi.createEquipmentType(typeData);
         dispatch(createEquipmentTypeSuccess(response.data));
+    return { success: true, data: response.data };
     } catch (error) {
         const errorMessage = error.response?.data?.message || 'Failed to create equipment type';
         dispatch(createEquipmentTypeFailure(errorMessage));
+    return { success: false, error: errorMessage };
     }
 };
 

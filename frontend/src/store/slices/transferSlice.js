@@ -49,9 +49,11 @@ export const fetchTransfers = (params) => async (dispatch) => {
     
     const response = await transferAPI.getTransfers(params);
     dispatch(fetchTransfersSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Failed to fetch transfers';
     dispatch(fetchTransfersFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -62,9 +64,11 @@ export const createTransfer = (transferData) => async (dispatch) => {
     
     const response = await transferAPI.createTransfer(transferData);
     dispatch(createTransferSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Failed to create transfer';
     dispatch(createTransferFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 

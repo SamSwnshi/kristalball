@@ -62,7 +62,7 @@ const baseSlice = createSlice({
 
 export const fetchBases = () => async (dispatch) => {
     try {
-        dispatch(setLoading);
+        dispatch(setLoading(true));
         dispatch(clearError());
 
         const response = await baseApi.getBases();

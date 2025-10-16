@@ -6,13 +6,13 @@ import { useForm } from 'react-hook-form';
 import { registerUser, clearError } from '../store/slices/authSlice';
 import { fetchBases, fetchRoles } from '../store/slices/baseSlice';
 import { Package, Eye, EyeOff } from 'lucide-react';
-
+import toast from 'react-hot-toast';
 
 const Signup = () => {
     const [showPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { loading, error } = useSelector((state) => state.auth);
+    const { loading } = useSelector((state) => state.auth);
     const { bases, roles } = useSelector((state) => state.base);
 
     const {
@@ -23,6 +23,7 @@ const Signup = () => {
     } = useForm();
 
     const password = watch('password');
+    const selectedRole = watch('role');
 
     useEffect(() => {
         dispatch(fetchBases());
@@ -32,14 +33,14 @@ const Signup = () => {
     const onSubmit = async (data) => {
         try {
             const result = await dispatch(registerUser(data));
-            if (registerUser.fulfilled.match(result)) {
-                // toast.success('Registration successful! Please login.');
+            if (result?.success) {
+                toast.success('Registration successful! Please login.');
                 navigate('/login');
             } else {
-                // toast.error(result.payload || 'Registration failed');
+                toast.error(result?.error || 'Registration failed');
             }
-        } catch (error) {
-            // toast.error('An unexpected error occurred');
+        } catch {
+            toast.error('An unexpected error occurred');
         }
     };
 
@@ -155,7 +156,7 @@ const Signup = () => {
                             >
                                 <option value="">Select a role</option>
                                 {roles.map((role) => (
-                                    <option key={role._id} value={role.name}>
+                                    <option key={role.id} value={role.name}>
                                         {role.name}
                                     </option>
                                 ))}
@@ -171,14 +172,14 @@ const Signup = () => {
                             </label>
                             <select
                                 {...register('baseId', {
-                                    required: 'Base is required for non-admin roles'
+                                    required: selectedRole !== 'Admin' ? 'Base is required for non-admin roles' : false
                                 })}
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-military-500 focus:border-military-500 sm:text-sm"
                                 onChange={clearErrorMessage}
                             >
                                 <option value="">Select a base</option>
                                 {bases.map((base) => (
-                                    <option key={base._id} value={base._id}>
+                                    <option key={base.id} value={base.id}>
                                         {base.name}
                                     </option>
                                 ))}
@@ -189,18 +190,7 @@ const Signup = () => {
                         </div>
                     </div>
 
-                    {error && (
-                        <div className="rounded-md bg-red-50 p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">Error</h3>
-                                    <div className="mt-2 text-sm text-red-700">
-                                        <p>{error}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Backend error block removed; toast will show errors */}
 
                     <div className='border-2 rounded-md border-gray-300'>
                         <button

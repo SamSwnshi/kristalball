@@ -81,9 +81,11 @@ export const loginUser = (credentials) => async (dispatch) => {
     localStorage.setItem("user", JSON.stringify(response.data.user));
 
     dispatch(loginSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || "Login failed";
+     const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Login failed';
     dispatch(loginFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -92,11 +94,13 @@ export const registerUser = (userData) => async (dispatch) => {
     dispatch(setLoading(true));
     dispatch(clearError());
     
-    const response = await authAPI.register(userData);
+    await authAPI.register(userData);
     dispatch(registerSuccess());
+    return { success: true };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Registration failed';
+     const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Registration failed';
     dispatch(registerFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -109,11 +113,13 @@ export const logoutUser = () => async (dispatch) => {
     localStorage.removeItem('user');
     
     dispatch(logoutSuccess());
+    return { success: true };
   } catch (error) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    const errorMessage = error.response?.data?.message || 'Logout failed';
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Logout failed';
     dispatch(logoutFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -122,11 +128,13 @@ export const setupBases = (baseData) => async (dispatch) => {
     dispatch(setLoading(true));
     dispatch(clearError());
     
-    const response = await authAPI.setupBases(baseData);
+    await authAPI.setupBases(baseData);
     dispatch(setupBasesSuccess());
+    return { success: true };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Setup failed';
+   const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Setup failed';
     dispatch(setupBasesFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 

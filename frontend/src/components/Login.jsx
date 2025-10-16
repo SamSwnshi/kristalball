@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { loginUser, clearError } from '../store/slices/authSlice';
 import { Package, Eye, EyeOff } from 'lucide-react';
-
+import toast from 'react-hot-toast';
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -20,16 +20,17 @@ const Login = () => {
     } = useForm();
 
     const onSubmit = async (data) => {
+          console.log("🟢 Login Form Data Submitted:", data);
         try {
             const result = await dispatch(loginUser(data));
-            if (loginUser.fulfilled.match(result)) {
-                // toast.success('Login successful!');
+            if (result?.success) {
+                toast.success('Login successful!');
                 navigate('/dashboard');
             } else {
-                // toast.error(result.payload || 'Login failed');
+                toast.error(result?.error || 'Login failed');
             }
-        } catch (error) {
-            // toast.error('An unexpected error occurred');
+        } catch {
+            toast.error('An unexpected error occurred');
         }
     };
 
@@ -85,7 +86,7 @@ const Login = () => {
                                 {...register('password', {
                                     required: 'Password is required',
                                     minLength: {
-                                        value: 6,
+                                        value: 5,
                                         message: 'Password must be at least 6 characters'
                                     }
                                 })}

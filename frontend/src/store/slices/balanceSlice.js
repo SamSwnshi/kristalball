@@ -67,9 +67,11 @@ export const fetchBalanceSummary = () => async (dispatch) => {
     
     const response = await balanceAPI.getBalanceSummary();
     dispatch(fetchBalanceSummarySuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Failed to fetch balance summary';
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to fetch balance summary';
     dispatch(fetchBalanceSummaryFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -80,9 +82,11 @@ export const calculateBalances = (balanceData) => async (dispatch) => {
     
     const response = await balanceAPI.calculateBalances(balanceData);
     dispatch(calculateBalancesSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Failed to calculate balances';
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to calculate balances';
     dispatch(calculateBalancesFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -93,9 +97,11 @@ export const setOpeningBalance = (balanceData) => async (dispatch) => {
     
     const response = await balanceAPI.setOpeningBalance(balanceData);
     dispatch(setOpeningBalanceSuccess());
+    return { success: true };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Failed to set opening balance';
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to set opening balance';
     dispatch(setOpeningBalanceFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -106,9 +112,11 @@ export const fetchDebugData = () => async (dispatch) => {
     
     const response = await balanceAPI.debugData();
     dispatch(fetchDebugDataSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Failed to fetch debug data';
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to fetch debug data';
     dispatch(fetchDebugDataFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 

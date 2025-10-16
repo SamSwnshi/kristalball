@@ -42,16 +42,20 @@ const purchaseSlice = createSlice({
 });
 
 
-export const fetchPurchases = (params) => async (dispatch) => {
+export const fetchPurchases = (params = {}) => async (dispatch, getState) => {
   try {
     dispatch(setLoading(true));
     dispatch(clearError());
-    
-    const response = await purchaseApi.getPurchases(params);
+    const query = { ...params };
+    // default to current user's purchases
+    if (query.mine === undefined) query.mine = true;
+    const response = await purchaseApi.getPurchases(query);
     dispatch(fetchPurchasesSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Failed to fetch purchases';
     dispatch(fetchPurchasesFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -62,9 +66,11 @@ export const createPurchase = (purchaseData) => async (dispatch) => {
     
     const response = await purchaseApi.createPurchase(purchaseData);
     dispatch(createPurchaseSuccess(response.data));
+    return { success: true, data: response.data };
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Failed to create purchase';
     dispatch(createPurchaseFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
